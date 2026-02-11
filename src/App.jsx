@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react'
 
 export default function App() {
   const productVideoRef = useRef(null)
+
+  // Helper: resolve public/ asset paths so they work with GitHub Pages base
+  const base = import.meta.env.BASE_URL || '/'
+  const asset = (p) => `${base}${encodeURI(p)}`
+
   // ✅ Hero video state (separate from carousel)
-  const heroVideos = ["/video1.mp4", "/video2.mp4"]
+  const heroVideos = [asset('video2.mp4'), asset('video3.mp4')]
   const [heroVideoIndex, setHeroVideoIndex] = useState(0)
   const heroVideoRef = useRef(null)
-
-  
 
   const [mobileOpen, setMobileOpen] = useState(false)
   
@@ -16,8 +19,6 @@ export default function App() {
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
-
-  
 
   // State for random floating molecules with collision detection
   const [molecules, setMolecules] = useState([])
@@ -152,45 +153,60 @@ export default function App() {
   const [isSlideshowVisible, setIsSlideshowVisible] = useState(false);
 
   useEffect(() => {
-	  if (!slideshowRef.current) return;
+    if (!slideshowRef.current) return;
 
-	  const observer = new IntersectionObserver(
-		([entry]) => {
-		  setIsSlideshowVisible(entry.intersectionRatio >= 0.4);
-		},
-		{ threshold: [0, 0.25, 0.4, 0.75] }
-	  );
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSlideshowVisible(entry.intersectionRatio >= 0.4);
+      },
+      { threshold: [0, 0.25, 0.4, 0.75] }
+    );
 
-	  observer.observe(slideshowRef.current);
-	  return () => observer.disconnect();
-	}, []);
+    observer.observe(slideshowRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-  // 1. Define Image Arrays for each product category
+  // 1. Define Image Arrays for each product category (use asset() helper)
   const productImages = {
     0: [ // Electrolyzer
-      "1-0.jpeg", "/electrolyzer-1.png", "/electrolyzer-2.png", "/electrolyzer-3.png", "/video3.mp4","/video4.mp4"
+      asset('1-0.jpeg'),
+      asset('electrolyzer-2.png'),
+      asset('electrolyzer-3.png'),
+      asset('video3.mp4'),
+      asset('video4.mp4'),
     ],
-    1: [ // Conversion Devices (Renamed) - Now includes stack.jpg
-       "/conversion-device-1.png", "/stack.jpg",  "/conversion-device-2.png", "/conversion-device-3.png"
+    1: [ // Conversion Devices (Renamed) - includes stack.jpg
+      asset('conversion-device-1.png'),
+      asset('stack.jpg'),
+      asset('conversion-device-2.png'),
+      asset('3d-printer-1.png'),
+      asset('3d-printer-2.png'),
+      asset('3d-printer-3.png'),
+      asset('conversion-device-3.png'),
     ],
     2: [ // Manufacturing
-      "3-0.jpeg", "3d printer (3).png", "/3d-printer-1.png", "/3d-printer-2.png", "/3d-printer-3.png"
-    ],
+      asset('3-0.jpeg'),
+      asset('4-7 (3).jpeg'),
+          ],
     3: [ // Testing (Renamed)
-       // Kept the lab video here as stack.jpg moved to Conversion
-       "4_1.png",  "4_2.png",  "4-3.png", "4-4.png", "4-5 (1).png", "4-6 (1).png" , "4-7 (3).jpeg"
+      asset('4_1.png'),
+      asset('4_2.png'),
+      asset('4-3.png'),
+      asset('4-4.png'),
+      asset('4-5 (1).png'),
+      asset('4-6 (1).png'),
     ]
   }
 
-	const nextImageInSegment = () => {
-	  const images = productImages[activeProductIndex];
-	  setActiveImageIndex((prev) => (prev + 1) % images.length);
-	};
+  const nextImageInSegment = () => {
+    const images = productImages[activeProductIndex];
+    setActiveImageIndex((prev) => (prev + 1) % images.length);
+  };
 
-	const prevImageInSegment = () => {
-	  const images = productImages[activeProductIndex];
-	  setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
-	};
+  const prevImageInSegment = () => {
+    const images = productImages[activeProductIndex];
+    setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
 
   // Product Data
@@ -224,47 +240,47 @@ export default function App() {
     }
   ]
   const isCurrentSlideVideo = () => {
-  const item =
-    productImages[activeProductIndex]?.[activeImageIndex];
-  return item?.endsWith(".mp4");
-};
+    const item =
+      productImages[activeProductIndex]?.[activeImageIndex];
+    return item?.endsWith(".mp4");
+  };
 
   // 2. The Cycle Logic (video-aware)
-useEffect(() => {
-  if (!isSlideshowVisible) return; // pause when not visible on screen
-  if (isHovered || showDetail) return;
+  useEffect(() => {
+    if (!isSlideshowVisible) return; // pause when not visible on screen
+    if (isHovered || showDetail) return;
 
-  // 🚫 Do NOT auto-cycle if current slide is a video
-  if (isCurrentSlideVideo()) return;
+    // 🚫 Do NOT auto-cycle if current slide is a video
+    if (isCurrentSlideVideo()) return;
 
-  const interval = setInterval(() => {
-    const currentImages = productImages[activeProductIndex] || [];
+    const interval = setInterval(() => {
+      const currentImages = productImages[activeProductIndex] || [];
 
-    if (activeImageIndex < currentImages.length - 1) {
-      setActiveImageIndex(prev => prev + 1);
-    } else {
-      setActiveImageIndex(0);
-      setActiveProductIndex(prev => (prev + 1) % products.length);
-    }
-  }, 2500);
+      if (activeImageIndex < currentImages.length - 1) {
+        setActiveImageIndex(prev => prev + 1);
+      } else {
+        setActiveImageIndex(0);
+        setActiveProductIndex(prev => (prev + 1) % products.length);
+      }
+    }, 2500);
 
-  return () => clearInterval(interval);
-}, [activeImageIndex, activeProductIndex, isSlideshowVisible, isHovered, showDetail]);
+    return () => clearInterval(interval);
+  }, [activeImageIndex, activeProductIndex, isSlideshowVisible, isHovered, showDetail]);
 
 
   useEffect(() => {
-  const currentItem =
-    productImages[activeProductIndex]?.[activeImageIndex]
+    const currentItem =
+      productImages[activeProductIndex]?.[activeImageIndex]
 
-  if (currentItem?.endsWith(".mp4") && productVideoRef.current) {
-    productVideoRef.current.load()
-    productVideoRef.current
-      .play()
-      .catch(() => {
-        // autoplay may be blocked until user interaction
-      })
-  }
-}, [activeProductIndex, activeImageIndex])
+    if (currentItem?.endsWith(".mp4") && productVideoRef.current) {
+      productVideoRef.current.load()
+      productVideoRef.current
+        .play()
+        .catch(() => {
+          // autoplay may be blocked until user interaction
+        })
+    }
+  }, [activeProductIndex, activeImageIndex])
 
 
   // Manual Navigation Helpers
@@ -291,7 +307,7 @@ useEffect(() => {
             <div className="flex items-center gap-4">
               <a href="#home" className="flex items-center gap-3 group">
                 <img 
-                  src="/logo.png" 
+                  src={asset('logo.png')} 
                   alt="H2DC12 Logo" 
                   className="h-16 w-auto object-contain transition-transform group-hover:scale-105" 
                 />
@@ -348,7 +364,6 @@ useEffect(() => {
   id="home"
   className="relative pt-32 pb-48 overflow-hidden z-0"
 >
-
           
           {/* Animated Chemical Structures Background */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -494,19 +509,26 @@ useEffect(() => {
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-white/90 lg:bg-white/80 z-10"></div> {/* Overlay to ensure text readability */}
             <video
-  ref={heroVideoRef}
-  src={heroVideos[heroVideoIndex]}
-  muted
-  playsInline
-  autoPlay
-  preload="auto"
-  className="h-full w-full object-cover"
-  onEnded={() =>
-    setHeroVideoIndex((prev) => (prev + 1) % heroVideos.length)
-  }
-/>
+			  ref={productVideoRef}
+			  src={productImages[activeProductIndex][activeImageIndex]}
+			  autoPlay
+			  muted
+			  playsInline
+			  className="h-full w-full object-cover"
+			  onEnded={() => {
+				const images = productImages[activeProductIndex];
 
-
+				if (activeImageIndex < images.length - 1) {
+				  // next image/video in the SAME product
+				  setActiveImageIndex(prev => prev + 1);
+				} else {
+				  // move to NEXT product
+				  setActiveImageIndex(0);
+				  setActiveProductIndex(prev => (prev + 1) % products.length);
+				}
+			  }}
+			/>
+	 
           </div>
 
           <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -556,31 +578,11 @@ useEffect(() => {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-slate-200 p-2">
                 <div className="bg-slate-50 rounded-xl p-6 aspect-[4/3] flex items-center justify-center relative">
                   {/* SVG Diagram */}
-                  <svg viewBox="0 0 300 400" className="w-full h-full">
-                    <defs>
-                      <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
-                        <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
-                      </marker>
-                      <pattern id="pattern" width="4" height="4" patternUnits="userSpaceOnUse">
-                         <circle cx="2" cy="2" r="1" fill="#cbd5e1" />
-                      </pattern>
-                    </defs>
-                    <path d="M100 380 L140 320" fill="none" stroke="#3b82f6" strokeWidth="12" />
-                    <path d="M200 380 L160 320" fill="none" stroke="#10b981" strokeWidth="12" />
-                    <rect x="130" y="100" width="40" height="220" fill="#e0f2fe" stroke="none" />
-                    <path d="M130 100 L90 40" fill="none" stroke="#ef4444" strokeWidth="12" />
-                    <path d="M170 100 L210 40" fill="none" stroke="#10b981" strokeWidth="12" />
-                    <rect x="130" y="100" width="8" height="220" fill="url(#pattern)" stroke="#b45309" strokeWidth="2" />
-                    <rect x="162" y="100" width="8" height="220" fill="url(#pattern)" stroke="#1e293b" strokeWidth="2" />
-                    <path d="M150 310 L150 110" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,5" markerEnd="url(#arrow)" />
-                    <circle cx="100" cy="60" r="6" fill="#ef4444" />
-                    <text x="80" y="30" fill="#ef4444" fontSize="14" fontWeight="bold">H₂</text>
-                    <circle cx="200" cy="60" r="6" fill="#10b981" />
-                    <text x="200" y="30" fill="#10b981" fontSize="14" fontWeight="bold">O₂</text>
-                    <text x="60" y="390" fill="#3b82f6" fontSize="12" fontWeight="bold">Catholyte In</text>
-                    <text x="190" y="390" fill="#10b981" fontSize="12" fontWeight="bold">Anolyte In</text>
-                    <text x="180" y="200" fill="#334155" fontSize="10" transform="rotate(90 180,200)">Co-Laminar Flow</text>
-                  </svg>
+                  <img
+					src={asset('main_d.png')}
+					alt="Electrolyzer schematic"
+					className="w-full h-full object-contain p-2"
+			      />
                 </div>
               </div>
             </div>
@@ -593,17 +595,17 @@ useEffect(() => {
     <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
        
        <div className="flex items-center gap-2">
-         <img src="/iitd-logo.png" alt="IIT Delhi" className="h-16 w-auto object-contain" />
+         <img src={asset('iitd-logo.png')} alt="IIT Delhi" className="h-16 w-auto object-contain" />
          <span className="font-bold text-slate-600">Incubated at IIT Delhi</span>
        </div>
        
        <div className="flex items-center gap-2">
-         <img src="/dst-logo.png" alt="DST" className="h-16 w-auto object-contain" />
+         <img src={asset('dst-logo.png')} alt="DST" className="h-16 w-auto object-contain" />
          <span className="font-bold text-slate-600">DST Supported</span>
        </div>
        
        <div className="flex items-center gap-2">
-         <img src="/startup-india-logo.png" alt="Startup India" className="h-16 w-auto object-contain" />
+         <img src={asset('startup-india-logo.png')} alt="Startup India" className="h-16 w-auto object-contain" />
          <span className="font-bold text-slate-600">Startup India Recognized</span>
        </div>
        
@@ -736,7 +738,7 @@ useEffect(() => {
       <div className="flex justify-center items-center opacity-100">
 
         <img
-          src="/clients-logos.png"
+          src={asset('clients-logos.png')}
           alt="Our Clients and Partners"
           className="max-h-28 md:max-h-32 w-auto object-contain"
         />
@@ -881,21 +883,21 @@ useEffect(() => {
         {
           name: "Prof. Suddhasatwa Basu",
           role: "Mentor and Co-Founder",
-          img: "/member-1.png",
+          img: asset('member-1.png'),
           link: "https://scholar.google.co.in/citations?hl=en&user=yQuWxScAAAAJ",
         },
-        {
-          name: "Ajinkya Kotkar",
-          role: "Director Business",
-          img: "/member-2.png",
-          link: "https://scholar.google.com/citations?user=cYsMyZoAAAAJ&hl=en",
-        },
-        {
-          name: "Ramji Dixit",
+		{
+          name: "Dr. Biswajit S. De",
           role: "Co-Founder",
-          img: "/member-8.png",
-          link: "https://scholar.google.com/citations?hl=en&user=je6n3a4AAAAJ",
+          img: asset('member-4.png'),
+          link: "https://scholar.google.com/citations?user=PP1CZUsAAAAJ&hl=en",
         },
+        {
+          name: "Dr. Aditya Singh",
+          role: "Co-Founder",
+          img: asset('member-5.png'),
+          link: "https://scholar.google.com/citations?user=xsLCqucAAAAJ&hl=en",
+        }, 
       ].map((member, i) => (
         <a
           key={i}
@@ -921,22 +923,22 @@ useEffect(() => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       {[
         {
+          name: "Dr. Ramji Dixit",
+          role: "Co-Founder",
+          img: asset('member-8.png'),
+          link: "https://scholar.google.com/citations?hl=en&user=je6n3a4AAAAJ",
+        },
+        {
+          name: "Ajinkya Kotkar",
+          role: "Director Business",
+          img: asset('member-2.png'),
+          link: "https://scholar.google.com/citations?user=cYsMyZoAAAAJ&hl=en",
+        },
+        {
           name: "Dr. Kedar Sahoo",
           role: "V.P. Tech.",
-          img: "/member-3.png",
+          img: asset('member-3.png'),
           link: "https://scholar.google.com/citations?user=bCDpafkAAAAJ&hl=en",
-        },
-        {
-          name: "Dr. Biswajit S. De",
-          role: "Co-Founder",
-          img: "/member-4.png",
-          link: "https://scholar.google.com/citations?user=PP1CZUsAAAAJ&hl=en",
-        },
-        {
-          name: "Dr. Aditya Singh",
-          role: "Co-Founder",
-          img: "/member-5.png",
-          link: "https://scholar.google.com/citations?user=xsLCqucAAAAJ&hl=en",
         },
       ].map((member, i) => (
         <a
@@ -1036,3 +1038,4 @@ useEffect(() => {
     </div>
   )
 }
+
