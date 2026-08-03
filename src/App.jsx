@@ -300,7 +300,7 @@ useEffect(() => {
                     H2DC12 Avenue
                   </span>
                   <span className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">
-                    Decarbonize India
+                    Decarbonize India7
                   </span>
                 </div>
               </a>
